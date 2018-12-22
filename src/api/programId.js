@@ -17,6 +17,10 @@ function buy(req, res) {
 function registerProgram(req, res) {
     const {email, price, purse} = req.query;
     UserModel.findOne({email}, function (err, user) {
+        if(user.type === 'user') {
+            res.status(400).end('Only developer account can register programs');
+            return;
+        }
         const programId = uuid();
         const data = {
             purse,

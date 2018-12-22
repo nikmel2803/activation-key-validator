@@ -8,7 +8,8 @@ const env = require('dotenv').config({path: path.resolve(__dirname, '../.env')})
 const blockSchema = new Schema({
     id: String,
     recoveryCode: String,
-    data: Array
+    data: Array,
+    ref_id: String, // reference for the last record of the user
 });
 const BlockModel = mongoose.model('Blocks', blockSchema);
 
@@ -16,32 +17,50 @@ class Hug {
     constructor() {
         this.PATH_TO_MONGODB = env.PATH_TO_MONGODB;
         this.STAX_API_ENDPOINT = env.STAX_API_ENDPOINT;
+        this.staxAccountId = undefined;
     }
 
     add(id, recoveryCode, data) {
-        return Promise.all(
-            this.saveToMongo(id, recoveryCode, data),
-            this.saveToBlockchain(id, recoveryCode, data)
-        )
-    }
-
-    saveToMongo(id, recoveryCode, data) {
-        BlockModel.findOne({id}, function (err, block) {
+        BlockModel.findOne({id}, async (err, block) => {
             let dataArray = [];
             dataArray.push(data);
-
-            if (!block) {
-                new BlockModel({id, recoveryCode, dataArray}).save();
+            if (!block) { // First block
+                console.log(dataArray);
+                const refId = await this.saveToBlockchain(id, recoveryCode, data, '');
+                new BlockModel({id, recoveryCode, data: dataArray, ref_id: refId}).save();
                 return;
             }
+            const currentRefId = block.ref_id;
             dataArray = dataArray.concat(block.data);
+            block.ref_id = await this.saveToBlockchain(id, recoveryCode, data, currentRefId);
             block.data = dataArray;
+            console.log(dataArray);
+
             block.save();
         });
     }
 
-    saveToBlockchain(id, recoveryCode, data) {
+    async saveToBlockchain(id, recoveryCode, data, ref_id) {
+        this.staxAccountId || await this.auth();
+        const dataToSave = {
+            id, recoveryCode, data, ref_id
+        };
+        try {
+            const response = await axios.post(env.STAX_API_ENDPOINT + '/storage', dataToSave, {
+                headers: {
+                    'originator-ref': this.staxAccountId
+                }
+            });
+            return response.data.ref_id;
+        } catch (e) {
+            console.log(e);
+        }
+    }
 
+    async auth() {
+        //TODO: обработать ошибку, в случае если нету аккаунтов...
+        const response = await axios.get(env.STAX_API_ENDPOINT + '/account');
+        this.staxAccountId = response.data[0];
     }
 }
 

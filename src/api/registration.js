@@ -25,7 +25,7 @@ function validateRegistration(req, res) {
             recoveryCode: uuid()
         }).save();
         TokenModel.deleteOne({value: tokenValue}, function (err, obj) {
-            console.log(err)
+            // console.log(err)
         });
     });
     res.send('OK');
