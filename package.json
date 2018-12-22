@@ -1,0 +1,11 @@
+{
+  "name": "activation-key-validator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/nikmel2803/activation-key-validator.git",
+  "author": "Nikita Melnikov <nikmel2803@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint-config-codex": "github:codex-team/eslint-config"
+  }
+}
