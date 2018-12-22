@@ -17,7 +17,7 @@ function buy(req, res) {
 function registerProgram(req, res) {
     const {email, price, purse} = req.query;
     UserModel.findOne({email}, function (err, user) {
-        if(user.type === 'user') {
+        if (user.type === 'user') {
             res.status(400).end('Only developer account can register programs');
             return;
         }
@@ -27,8 +27,10 @@ function registerProgram(req, res) {
             price,
             program_id: programId,
         };
-        hug.add(user.id, user.recoveryCode, data);
-        res.send(programId);
+        hug.add(user.id, user.recoveryCode, data)
+            .then(() => res.send(programId))
+            .catch(() => res.status(400).end())
+
     });
 }
 

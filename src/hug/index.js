@@ -21,23 +21,29 @@ class Hug {
     }
 
     add(id, recoveryCode, data) {
-        BlockModel.findOne({id}, async (err, block) => {
-            let dataArray = [];
-            dataArray.push(data);
-            if (!block) { // First block
-                console.log(dataArray);
-                const refId = await this.saveToBlockchain(id, recoveryCode, data, '');
-                new BlockModel({id, recoveryCode, data: dataArray, ref_id: refId}).save();
-                return;
-            }
-            const currentRefId = block.ref_id;
-            dataArray = dataArray.concat(block.data);
-            block.ref_id = await this.saveToBlockchain(id, recoveryCode, data, currentRefId);
-            block.data = dataArray;
-            console.log(dataArray);
+        return new Promise((resolve, reject) => {
+            BlockModel.findOne({id}, async (err, block) => {
+                if (err) reject(err);
+                let dataArray = [];
+                dataArray.push(data);
 
-            block.save();
-        });
+                if (!block) { // First block
+                    const refId = await this.saveToBlockchain(id, recoveryCode, data, '');
+
+                    new BlockModel({id, recoveryCode, data: dataArray, ref_id: refId}).save();
+                    resolve();
+                    return;
+                }
+                const currentRefId = block.ref_id;
+
+                dataArray = dataArray.concat(block.data);
+                block.ref_id = await this.saveToBlockchain(id, recoveryCode, data, currentRefId);
+                block.data = dataArray;
+                block.save();
+                resolve();
+            });
+        })
+
     }
 
     async saveToBlockchain(id, recoveryCode, data, ref_id) {
