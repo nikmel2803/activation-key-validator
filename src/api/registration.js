@@ -22,8 +22,7 @@ function validateRegistration(req, res) {
             email: obj.email,
             id: uuid(),
             type: obj.type === 'register-user' ? 'user' : 'developer',
-            recoveryCode: uuid(),
-            ref_id: null
+            recoveryCode: uuid()
         }).save();
         TokenModel.deleteOne({value: tokenValue}, function (err, obj) {
             console.log(err)

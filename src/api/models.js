@@ -18,8 +18,7 @@ const userSchema = new Schema({
     email: String,
     id: String,
     type: String,
-    recoveryCode: String,
-    ref_id: String
+    recoveryCode: String
 });
 
 const UserModel = mongoose.model('Users', userSchema);
