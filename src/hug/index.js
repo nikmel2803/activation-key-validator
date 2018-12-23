@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const axios = require('axios');
 const Schema = mongoose.Schema;
 
+const crypto = require('crypto');
+
 const path = require('path');
 const env = require('dotenv').config({path: path.resolve(__dirname, '../.env')}).parsed;
 
@@ -23,21 +25,25 @@ class Hug {
     add(id, recoveryCode, data) {
         return new Promise((resolve, reject) => {
             BlockModel.findOne({id}, async (err, block) => {
+                const hashedRecoveryCode = crypto.createHmac('sha256', '')
+                    .update(recoveryCode)
+                    .digest('hex');
                 if (err) reject(err);
                 let dataArray = [];
                 dataArray.push(data);
-
                 if (!block) { // First block
-                    const refId = await this.saveToBlockchain(id, recoveryCode, data, '');
+                    const refId = await this.saveToBlockchain(id, hashedRecoveryCode, data, '');
 
-                    new BlockModel({id, recoveryCode, data: dataArray, ref_id: refId}).save();
+                    // console.log(block)
+
+                    new BlockModel({id, recoveryCode:hashedRecoveryCode, data: dataArray, ref_id: refId}).save();
                     resolve();
                     return;
                 }
                 const currentRefId = block.ref_id;
 
                 dataArray = dataArray.concat(block.data);
-                block.ref_id = await this.saveToBlockchain(id, recoveryCode, data, currentRefId);
+                block.ref_id = await this.saveToBlockchain(id, hashedRecoveryCode, data, currentRefId);
                 block.data = dataArray;
                 block.save();
                 resolve();
@@ -65,8 +71,13 @@ class Hug {
 
     async auth() {
         //TODO: обработать ошибку, в случае если нету аккаунтов...
-        const response = await axios.get(env.STAX_API_ENDPOINT + '/account');
-        this.staxAccountId = response.data[0];
+        try {
+            const response = await axios.get(env.STAX_API_ENDPOINT + '/account');
+            this.staxAccountId = response.data[0];
+        } catch (e) {
+            console.log(e);
+        }
+
     }
 
     get(id, query) {

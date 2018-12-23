@@ -53,6 +53,7 @@ function registerProgram(req, res) {
             price,
             program_id: programId,
         };
+
         hug.add(user.id, user.recoveryCode, data)
             .then(() => res.send(programId))
             .catch(() => res.status(400).end())
@@ -60,7 +61,7 @@ function registerProgram(req, res) {
     });
 }
 
-function setPrice(req, res) {
+function setPaymentSettings(req, res) {
     const {email, newPrice, programId} = req.query;
     UserModel.findOne({email}, function (err, user) {
         if (user.type === 'user') {
@@ -79,14 +80,9 @@ function setPrice(req, res) {
     });
 }
 
-function setPurse(req, res) {
-
-}
-
 module.exports = {
     check,
     buy,
     registerProgram,
-    setPrice,
-    setPurse
+    setPaymentSettings,
 };
