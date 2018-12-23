@@ -68,6 +68,17 @@ class Hug {
         const response = await axios.get(env.STAX_API_ENDPOINT + '/account');
         this.staxAccountId = response.data[0];
     }
+
+    get(id, query) {
+        return new Promise((resolve, reject) => {
+            BlockModel.findOne({
+                id,
+                data: {$elemMatch: query}
+            }, function (err, res) {
+                resolve(res);
+            })
+        });
+    }
 }
 
 module.exports = new Hug();

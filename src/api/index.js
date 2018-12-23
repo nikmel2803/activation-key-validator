@@ -11,5 +11,6 @@ router.get('/register/validate/:token', registration.validateRegistration);
 
 router.get('/buy', programId.buy);
 router.get('/register-program', programId.registerProgram);
+router.get('/check', programId.check);
 
 module.exports = router;
